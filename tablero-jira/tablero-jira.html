@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tablero de Jira</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <div class="jira-card">
+      <h3>Backlog de desarrollo</h3>
+      <div class="input-group">
+        <input
+          type="text"
+          id="taskInput"
+          class="inp"
+          placeholder="Añadir una tarea"
+        />
+        <button id="addBtn" class="btn-add">Crear</button>
+      </div>
+      <ul id="taskList" class="taskList"></ul>
+    </div>
+
+    <script>
+      let tareas = [];
+
+      const input = document.getElementById("taskInput");
+      const addBtn = document.querySelector(".btn-add");
+      const list = document.querySelector("ul");
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          addTask();
+        }
+      });
+      addBtn.addEventListener("click", () => {
+        addTask();
+      });
+
+      const addTask = () => {
+        const texto = input.value.trim();
+        if (texto === "") return;
+
+        const newTask = {
+          id: Date.now(),
+          text: texto,
+          completed: false,
+        };
+        tareas.push(newTask);
+        input.value = "";
+        console.log("Se agrego la tarea con exito", tareas);
+        render();
+      };
+      function render() {
+        list.innerHTML = "";
+        tareas.forEach((tarea) => {
+          const li = document.createElement("li");
+          // se guarda el id de la tarea en el elemento li para identificarla dinámicamente
+          li.dataset.id = tarea.id;
+
+          const parrafo = document.createElement("p");
+          const contenidoParrafo = document.createTextNode(tarea.text);
+          // si la tarea está completada se mantiene el estilo al renderizar
+          if (tarea.completed) {
+            parrafo.classList.add("completed");
+          }
+
+          // se crea un boton eliminar de manera dinamica
+          const botonEliminar = document.createElement("button");
+          // se crea un boton actualizar de manera dinamica
+          const botonActualizar = document.createElement("button");
+
+          // se crea el contenido de texto para el boton eliminar
+          const contenidoBottonEliminar =
+            document.createTextNode("Eliminar Tarea");
+          // se crea el contenido de texto para el boton actualizar
+          const contenidoBotonActualizar =
+            document.createTextNode("Actualizar Tarea");
+
+          // se le ingresa dinamicamente al boton eliminar el classname 'btn-delete'
+          botonEliminar.classList.add("btn-delete");
+          // se le ingresa dinamicamente al boton actualizar el classname 'btn-edit'
+          botonActualizar.classList.add("btn-edit");
+
+          // se le inserta ese contenido de texto al boton eliminar con appendChild
+          botonEliminar.appendChild(contenidoBottonEliminar);
+          // se le inserta ese contenido de texto al boton actualizar con appendChild
+          botonActualizar.appendChild(contenidoBotonActualizar);
+
+          parrafo.appendChild(contenidoParrafo);
+
+          li.appendChild(parrafo);
+
+          // se le inserta el boton eliminar de manera dinamica al elemento de la lista
+          li.appendChild(botonEliminar);
+          // se le inserta el boton actualizar de manera dinamica al elemento de la lista
+          li.appendChild(botonActualizar);
+
+          list.appendChild(li);
+        });
+      }
+
+      // obtento toda la lista dinamica a partir del metodo getElementoById
+      const elementosTareas = document.getElementById("taskList");
+
+      // itero por cada elemento de la lista y agrego un evento para cada uno
+      // que consiste en darle click (delegación de eventos para elementos dinámicos)
+      elementosTareas.addEventListener("click", (evento) => {
+        // obtengo el elemento li dentro del elemento ul usando el metodo closest
+        // que busca hacia arriba si el elemento o su padre es un <li>
+        const li = evento.target.closest("li");
+        if (!li) return;
+
+        // se obtiene el id de la tarea desde el data-id del li para saber cuál se seleccionó
+        const id = Number(li.dataset.id);
+        const tarea = tareas.find((t) => t.id === id);
+        if (!tarea) return;
+
+        // se obtienen los elementos/botones dentro del li usando closest
+        const botonEliminar = evento.target.closest(".btn-delete");
+        const botonActualizar = evento.target.closest(".btn-edit");
+        const parrafo = evento.target.closest("p");
+
+        // si se le da click al boton actualizar, se muestra un prompt con el texto actual
+        // de la tarea seleccionada dinámicamente para poder modificarlo
+        if (botonActualizar) {
+          const nuevoTexto = prompt("Actualizar tarea:", tarea.text);
+          if (nuevoTexto === null) return;
+
+          const textoLimpio = nuevoTexto.trim();
+          if (textoLimpio === "") return;
+
+          tarea.text = textoLimpio;
+          render();
+          return;
+        }
+
+        // si se le da click al boton eliminar, se elimina la tarea del arreglo y se vuelve
+        // a renderizar la lista para reflejar los cambios dinámicamente
+        if (botonEliminar) {
+          tareas = tareas.filter((t) => t.id !== id);
+          render();
+          return;
+        }
+
+        // si existe el elemento p dentro de li lo unico que hacemos es cambiar su estado
+        // completed para que cambie su estilo dinamicamente
+        if (parrafo) {
+          tarea.completed = !tarea.completed;
+          render();
+        }
+      });
+    </script>
+  </body>
+</html>
